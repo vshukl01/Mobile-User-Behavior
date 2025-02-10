@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>Data_preperation.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Data_preperation.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">csv</span>
+<span class="s0">import </span><span class="s1">re</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s2"># path</span>
+<span class="s1">CSV_FILE_PATH </span><span class="s3">= </span><span class="s4">&quot;/Users/vedshukla/Library/Mobile Documents/com~apple~CloudDocs/Mobile_user/user_behavior_dataset.csv&quot;</span>
+<span class="s1">ARFF_FILE_PATH </span><span class="s3">= </span><span class="s4">&quot;/Users/vedshukla/Library/Mobile Documents/com~apple~CloudDocs/Mobile_user/user_behavior_dataset.arff&quot;</span>
+
+
+<span class="s2"># read a CSV file</span>
+<span class="s0">def </span><span class="s1">read_csv</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">):</span>
+    <span class="s1">data </span><span class="s3">= []</span>
+    <span class="s0">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">, </span><span class="s1">mode</span><span class="s3">=</span><span class="s4">'r'</span><span class="s3">, </span><span class="s1">encoding</span><span class="s3">=</span><span class="s4">'utf-8'</span><span class="s3">) </span><span class="s0">as </span><span class="s1">file</span><span class="s3">:</span>
+        <span class="s1">csv_reader </span><span class="s3">= </span><span class="s1">csv</span><span class="s3">.</span><span class="s1">reader</span><span class="s3">(</span><span class="s1">file</span><span class="s3">)</span>
+        <span class="s0">for </span><span class="s1">row </span><span class="s0">in </span><span class="s1">csv_reader</span><span class="s3">:</span>
+            <span class="s1">data</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">row</span><span class="s3">)</span>
+    <span class="s0">return </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span><span class="s1">data</span><span class="s3">)</span>
+
+
+<span class="s2"># determine attribute is categorical</span>
+<span class="s0">def </span><span class="s1">not_nominal</span><span class="s3">(</span><span class="s1">vals</span><span class="s3">):</span>
+    <span class="s1">unique_count </span><span class="s3">= </span><span class="s1">len</span><span class="s3">(</span><span class="s1">set</span><span class="s3">(</span><span class="s1">vals</span><span class="s3">))</span>
+    <span class="s0">return </span><span class="s1">unique_count </span><span class="s3">&gt;= </span><span class="s1">len</span><span class="s3">(</span><span class="s1">vals</span><span class="s3">) / </span><span class="s5">20</span>
+
+
+<span class="s2"># check column contains numeric values</span>
+<span class="s0">def </span><span class="s1">is_numeric</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">ind</span><span class="s3">):</span>
+    <span class="s1">vals </span><span class="s3">= []</span>
+    <span class="s1">attr_set </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:, </span><span class="s1">ind</span><span class="s3">]</span>
+
+    <span class="s0">for </span><span class="s1">elem </span><span class="s0">in </span><span class="s1">attr_set</span><span class="s3">:</span>
+        <span class="s0">try</span><span class="s3">:</span>
+            <span class="s1">val </span><span class="s3">= </span><span class="s1">float</span><span class="s3">(</span><span class="s1">elem</span><span class="s3">)</span>
+            <span class="s1">vals</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">val</span><span class="s3">)</span>
+        <span class="s0">except </span><span class="s1">ValueError</span><span class="s3">:</span>
+            <span class="s0">return False</span>
+
+    <span class="s0">return </span><span class="s1">not_nominal</span><span class="s3">(</span><span class="s1">vals</span><span class="s3">)</span>
+
+
+<span class="s2"># check column contains date values</span>
+<span class="s0">def </span><span class="s1">is_date</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">ind</span><span class="s3">):</span>
+    <span class="s1">attr_set </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:, </span><span class="s1">ind</span><span class="s3">]</span>
+
+    <span class="s0">for </span><span class="s1">val </span><span class="s0">in </span><span class="s1">attr_set</span><span class="s3">:</span>
+        <span class="s0">if not </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'^\d{4}-\d{2}-\d{2}$'</span><span class="s3">, </span><span class="s1">val</span><span class="s3">):</span>
+            <span class="s0">return False</span>
+    <span class="s0">return True</span>
+
+
+<span class="s2"># extract unique nominal values</span>
+<span class="s0">def </span><span class="s1">get_nominal_values</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">ind</span><span class="s3">):</span>
+    <span class="s0">return </span><span class="s1">set</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:, </span><span class="s1">ind</span><span class="s3">])</span>
+
+
+<span class="s2"># determine attribute</span>
+<span class="s0">def </span><span class="s1">get_attributes</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">):</span>
+    <span class="s1">attributes </span><span class="s3">= {}</span>
+
+    <span class="s0">for </span><span class="s1">attr </span><span class="s0">in </span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">0</span><span class="s3">]:</span>
+        <span class="s1">ind </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">where</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">0</span><span class="s3">] == </span><span class="s1">attr</span><span class="s3">)[</span><span class="s5">0</span><span class="s3">][</span><span class="s5">0</span><span class="s3">]</span>
+        <span class="s0">if </span><span class="s1">is_numeric</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">, </span><span class="s1">ind</span><span class="s3">):</span>
+            <span class="s1">attributes</span><span class="s3">[</span><span class="s1">attr</span><span class="s3">] = </span><span class="s4">&quot;numeric&quot;</span>
+            <span class="s0">continue</span>
+
+        <span class="s1">attr_vals </span><span class="s3">= </span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:, </span><span class="s1">ind</span><span class="s3">]</span>
+        <span class="s0">if </span><span class="s1">not_nominal</span><span class="s3">(</span><span class="s1">attr_vals</span><span class="s3">):</span>
+            <span class="s1">attributes</span><span class="s3">[</span><span class="s1">attr</span><span class="s3">] = </span><span class="s4">&quot;date&quot; </span><span class="s0">if </span><span class="s1">is_date</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">, </span><span class="s1">ind</span><span class="s3">) </span><span class="s0">else </span><span class="s4">&quot;string&quot;</span>
+        <span class="s0">else</span><span class="s3">:</span>
+            <span class="s1">attributes</span><span class="s3">[</span><span class="s1">attr</span><span class="s3">] = </span><span class="s4">&quot;nominal&quot;</span>
+
+    <span class="s0">return </span><span class="s1">attributes</span>
+
+
+<span class="s2"># nominal values of attribute</span>
+<span class="s0">def </span><span class="s1">get_nomvals_from_attr</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">, </span><span class="s1">attr</span><span class="s3">):</span>
+    <span class="s1">attr_ind </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">where</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">0</span><span class="s3">] == </span><span class="s1">attr</span><span class="s3">)[</span><span class="s5">0</span><span class="s3">][</span><span class="s5">0</span><span class="s3">]</span>
+    <span class="s0">return </span><span class="s1">sorted</span><span class="s3">(</span><span class="s1">set</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:, </span><span class="s1">attr_ind</span><span class="s3">]))</span>
+
+
+<span class="s2"># dataset to an ARFF file</span>
+<span class="s0">def </span><span class="s1">write_data</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">, </span><span class="s1">relation_name</span><span class="s3">, </span><span class="s1">dataset</span><span class="s3">):</span>
+    <span class="s1">attributes </span><span class="s3">= </span><span class="s1">get_attributes</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">)</span>
+
+    <span class="s0">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">, </span><span class="s4">'w'</span><span class="s3">, </span><span class="s1">encoding</span><span class="s3">=</span><span class="s4">'utf-8'</span><span class="s3">) </span><span class="s0">as </span><span class="s1">file</span><span class="s3">:</span>
+        <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">f&quot;%</span><span class="s0">\n</span><span class="s4">%</span><span class="s0">\n</span><span class="s4">%</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+        <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">f&quot;@relation </span><span class="s0">{</span><span class="s1">relation_name</span><span class="s0">}\n\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+
+        <span class="s0">for </span><span class="s1">attr </span><span class="s0">in </span><span class="s1">attributes</span><span class="s3">:</span>
+            <span class="s1">attr_label </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">sub</span><span class="s3">(</span><span class="s4">r&quot; &quot;</span><span class="s3">, </span><span class="s4">&quot;_&quot;</span><span class="s3">, </span><span class="s1">attr</span><span class="s3">)  </span><span class="s2"># Replace spaces with underscores</span>
+
+            <span class="s0">if </span><span class="s1">attributes</span><span class="s3">[</span><span class="s1">attr</span><span class="s3">] == </span><span class="s4">&quot;nominal&quot;</span><span class="s3">:</span>
+                <span class="s1">nom_vals </span><span class="s3">= </span><span class="s1">get_nomvals_from_attr</span><span class="s3">(</span><span class="s1">dataset</span><span class="s3">, </span><span class="s1">attr</span><span class="s3">)</span>
+                <span class="s1">formatted_values </span><span class="s3">= </span><span class="s4">&quot;,&quot;</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">re</span><span class="s3">.</span><span class="s1">sub</span><span class="s3">(</span><span class="s4">r&quot; &quot;</span><span class="s3">, </span><span class="s4">&quot;_&quot;</span><span class="s3">, </span><span class="s1">val</span><span class="s3">) </span><span class="s0">for </span><span class="s1">val </span><span class="s0">in </span><span class="s1">nom_vals</span><span class="s3">)</span>
+                <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">f&quot;@attribute </span><span class="s0">{</span><span class="s1">attr_label</span><span class="s0">} {{{</span><span class="s1">formatted_values</span><span class="s0">}}}\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+            <span class="s0">else</span><span class="s3">:</span>
+                <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">f&quot;@attribute </span><span class="s0">{</span><span class="s1">attr_label</span><span class="s0">} {</span><span class="s1">attributes</span><span class="s3">[</span><span class="s1">attr</span><span class="s3">]</span><span class="s0">}\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+
+        <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s0">\n</span><span class="s4">@data</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+        <span class="s0">for </span><span class="s1">record </span><span class="s0">in </span><span class="s1">dataset</span><span class="s3">[</span><span class="s5">1</span><span class="s3">:]:</span>
+            <span class="s1">formatted_record </span><span class="s3">= </span><span class="s4">&quot;,&quot;</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">re</span><span class="s3">.</span><span class="s1">sub</span><span class="s3">(</span><span class="s4">r&quot; &quot;</span><span class="s3">, </span><span class="s4">&quot;_&quot;</span><span class="s3">, </span><span class="s1">item</span><span class="s3">) </span><span class="s0">for </span><span class="s1">item </span><span class="s0">in </span><span class="s1">record</span><span class="s3">)</span>
+            <span class="s1">file</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">f&quot;</span><span class="s0">{</span><span class="s1">formatted_record</span><span class="s0">}\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+
+
+<span class="s2"># Main</span>
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s4">&quot;__main__&quot;</span><span class="s3">:</span>
+    <span class="s0">try</span><span class="s3">:</span>
+        <span class="s2"># read csv file</span>
+        <span class="s1">data </span><span class="s3">= </span><span class="s1">read_csv</span><span class="s3">(</span><span class="s1">CSV_FILE_PATH</span><span class="s3">)</span>
+
+        <span class="s2"># remove first column</span>
+        <span class="s1">arr </span><span class="s3">= </span><span class="s1">data</span><span class="s3">[:, </span><span class="s5">1</span><span class="s3">:]</span>
+
+        <span class="s2"># arff file</span>
+        <span class="s1">write_data</span><span class="s3">(</span><span class="s1">ARFF_FILE_PATH</span><span class="s3">, </span><span class="s4">'user_behavior'</span><span class="s3">, </span><span class="s1">arr</span><span class="s3">)</span>
+        <span class="s1">print</span><span class="s3">(</span><span class="s4">f&quot;Conversion successful: </span><span class="s0">{</span><span class="s1">ARFF_FILE_PATH</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+
+    <span class="s0">except </span><span class="s1">Exception </span><span class="s0">as </span><span class="s1">e</span><span class="s3">:</span>
+        <span class="s1">print</span><span class="s3">(</span><span class="s4">f&quot;Error: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+</pre>
+</body>
+</html>
